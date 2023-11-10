@@ -157,7 +157,7 @@ fixation.setPos( (0,0) )
 msg = 'Hello! %s -- Spacing is: %f -- Please note filter-- Thx!!' %( SubjectName, spacingMult )
 fixation.setText( msg.upper() ) # sloan needs to be uppercase
 #fixation.setText( 'Calibrating monitor...' )
-for i in numpy.arange(100):
+for i in numpy.arange(20):
 	fixation.draw()
 	[stim.draw() for stim in stims]
 	#[cue.draw() for cue in cues]
@@ -166,17 +166,13 @@ savetimes = myWin.frameIntervals
 fliprate = numpy.mean( savetimes[20:80] )
 print( 'fliprate=%f' % fliprate)
 
-#ixation.setHeight(20)
-#sg = 'Hello! %s\n Spacing is: %f\n Please remember filter/projector.\nThanks!' %( SubjectName, spacingMult )
-#ixation.setText( msg.upper() ) # sloan needs to be uppercase
-#fixation.setText( 'Press any key twice to start (first goes to fixation screen)\n'.upper() )
 fixation.draw()
 myWin.flip()
 event.waitKeys()
-fixation.setPos( (0,exper.yloc_fixation_pix) )
+fixation.setPos( (-1920/2*7/8,0) ) # Fixation in LVF 7/8 to the end of the screen
 
-fixation.setHeight(70)
-fixation.setText( '-----' )
+fixation.setHeight(200)
+fixation.setText( '+' )
 fixation.draw()
 myWin.flip()
 event.waitKeys()
@@ -195,11 +191,6 @@ while not done:
 	core.wait(pre_time)
 	fixation.draw()
 
-	#if (numpy.random.rand() < 0.5) & (trialNum>0):
-		#repeat = True
-	#else:
-		#repeat = False
-	
 	if repeat == False:
 		[stim.getTrial(trialNum) for stim in stims]
 
@@ -282,29 +273,30 @@ while not done:
 		response_list_disp.draw()
 		myWin.flip()
 
-	resp_ori = numpy.floor(numpy.random.rand()*4)*90
+	valid_resp = True
 	for key in event.waitKeys():
-		if key in [ 'escape' ]:
-			#core.quit()
+		if key in [ 'escape', 'q' ]:
 			done = True
+			valid_resp = False
 		if key in [ 'left' ]:
 			resp_ori = 180
 		if key in [ 'right' ]:
 			resp_ori = 0
 		if key in [ 'up' ]:
-			resp_ori = 90
+			resp_ori = 270  # TODO: FIXME!!!
 		if key in [ 'down' ]:
-			resp_ori = 270 
-		if key in [ 'r' ]:
-			repeat = (repeat == False)
+			resp_ori = 90 
 
-	#outfile.write( "%s, %s %s %s\n" % (key, targ.strvals(), olL.strvals(), olR.strvals() ) )
 	iscorrect = (resp_ori == targ.ori)
-	thisStair.addData( iscorrect )
+	print(key, targ.ori, valid_resp,resp_ori,targ.strvals())
+	if valid_resp:
+	    outfile.write( "%s, %s\n" % (key, targ.strvals())) #, olL.strvals(), olR.strvals() ) )
+	    iscorrect = (resp_ori == targ.ori)
+	    thisStair.addData( iscorrect )
 
-	trialNum += 1
-	if trialNum >= maxtrials:
-		done = True
+	    trialNum += 1
+	    if trialNum >= maxtrials:
+		    done = True
 
 myWin.close()
 
@@ -328,7 +320,7 @@ if OutputHeader:
 	#utfile.write( '#degrees_eccentricity=' + str(degrees_eccentricity) + "\n" )
 	outfile.write( '#exper.yloc_pix=' + str(exper.yloc_pix) + "\n" )
 	outfile.write( '#trial time=' + str(trial_time) + "\n")
-	outfile.write( "key, targ.strvals(), olL.strvals(), olR.strvals() ")
+	outfile.write( "#key, targ.strvals(), olL.strvals(), olR.strvals() ")
 
 outfile.close()
 
