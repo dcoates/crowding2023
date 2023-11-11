@@ -7,10 +7,9 @@ def  rad2deg( angle ):
     return angle * 180.0 / numpy.pi
 
 class experSony():
-	def __init__(self, screendim, distance, stim_ecc_deg, yloc_fixation_pix=0 ):
+	def __init__(self, screendim, distance, height_mm, stim_ecc_deg, yloc_fixation_pix=0 ):
 		self.screendim = screendim
-		#screensize = 100.0 / 36.0 # pix/mm for Sony Trinitron at 1024x768 (or ~ 768/284)
-		self.screensize = screendim[1] / 225 #84.0 # height is 284 mm, 768 pixels
+		self.screensize = screendim[1] / height_mm 
 		self.distance = distance 
 		self.stim_ecc_deg = stim_ecc_deg #distance from fixation to center of 'o' in degrees
 		self.yloc_fixation_pix = yloc_fixation_pix #distance from fixation to ceter of screen in pixels

@@ -1,5 +1,4 @@
 from psychopy import *
-#from psychopy import log
 import psychopy.data as pd 
 import numpy
 import time
@@ -20,6 +19,31 @@ else:
     
 stimHeightDeg = 2.25 # dummy
 
+
+#Creates a GUI where the examiner enters the information of the subject that is to be tested
+myDlg = gui.Dlg(title="Reading Experiment")
+myDlg.addText('Subject Information')
+myDlg.addField('Name:','TEST')
+myDlg.addField('IGNORE',1)
+myDlg.addField('Use Pupil Labs Eye Tracker', choices=["False", "True"])
+myDlg.addField('Ecc',choices=["10", "20"])
+myDlg.addField('Size (deg):',1)
+myDlg.addField('Which letter:',choices=['E','T'])
+myDlg.addField('Contrast:',choices=[1.0,0.1,0.01])
+myDlg.addField('Duration',choices=[0.05,0.075,0.15,0.3,-1])
+ok_data = myDlg.show()  # show dialog and wait for OK or Cancel
+if myDlg.OK:  # or if ok_data is not None
+    SubjectName = ok_data[0]
+    subj_id=ok_data[1]
+    use_tracker = ok_data[2]
+    ecc = float(ok_data[3])
+    size_deg = float(ok_data[4])
+    which_let = ok_data[5]
+    contrast = float(ok_data[6])
+    trial_time = float(ok_data[7])
+else:
+    print('user cancelled')
+
 # Utility functions
 def randi( high, numvals=None, low=0 ):
 	if numvals == None:
@@ -39,18 +63,19 @@ OutputHeader = True
 # This experiment: contrasts
 #backcol= ( -0.5, -0.5, -0.5 )
 backcol= ( 0,0,0 )
-#targcol= (-1.00,-1.00,-1.00)	
-targcol= ( -1.0, -1.0,  -1.0 )
-#targcol= ( 1.0, 1.0, 1.0 )
+targcol = [ 0.0 - contrast ] *3
 
-# TODO: We want it at 8 degress, so why need 9??
-exper = conditions.experSony( (1920,1080), 1080.0, 9.0, 370 )
+fix_pos = ( (-1920/2*7/8,0) ) # Fixation in LVF 7/8 to the end of the screen
+
+distance = 200
+height_mm = 100
+
+exper = conditions.experSony( (1920,1080), distance, height_mm, 9.0, 370 )
 font = conditions.fontArial( targcol )
 font.setCharDegs( stimHeightDeg, exper )
 
 # This experiment - trials, timing, etc. 
 ntrials = 1000.0
-trial_time =  0.150  # in sec. use -1 for infinite
 pre_time = 0.00
 mask_time = 0.000
 
@@ -67,7 +92,9 @@ myWin.setRecordFrameIntervals(True)
 
 #log.console.setLevel(log.ERROR)
 
-fixation = visual.TextStim(myWin,pos=(0,exper.yloc_fixation_pix),alignHoriz='center',height=9, color=font.contrast, ori=0, font=font.selfont ) 
+
+fixation = visual.TextStim(myWin,pos=(0,exper.yloc_fixation_pix),alignHoriz='center',height=9, color=(-1,-1,-1), ori=0, font=font.selfont,
+                           anchorHoriz='center',anchorVert='center' ) 
 fixation.setText( 'o' )
 
 # Post-trial text
@@ -99,26 +126,29 @@ seqL = [targets[i] for i in buildtrialseq( numpy.arange(len(targets)), maxtrials
 seqR = [targets[i] for i in buildtrialseq( numpy.arange(len(targets)), maxtrials) ]
 seqU = [targets[i] for i in buildtrialseq( numpy.arange(len(targets)), maxtrials) ]
 seqD = [targets[i] for i in buildtrialseq( numpy.arange(len(targets)), maxtrials) ]
- 
-targ = stims.stim_letter( myWin, font.let_height_ptfont, font.contrast, font.selfont, 
-	{'height': test_heights, 'xpos':0.0, 'ypos':exper.yloc_pix, 'text':'E', 'ori':targseq}  )
-left = stims.stim_letter( myWin, font.let_height_ptfont, font.contrast, font.selfont, 
-	{'xpos':-spacing, 'ypos':exper.yloc_pix, 'text':'E', 'height':test_heights, 'ori':seqL}  )
-right = stims.stim_letter( myWin, font.let_height_ptfont, font.contrast, font.selfont, 
-	{'xpos':+spacing, 'ypos':exper.yloc_pix, 'text':'E', 'height':test_heights, 'ori':seqR}  )
 
-up = stims.stim_letter( myWin, font.let_height_ptfont, font.contrast, font.selfont, 
-	{'xpos':+spacing, 'ypos':exper.yloc_pix, 'text':'E', 'height':test_heights, 'ori':seqU}  )
-down = stims.stim_letter( myWin, font.let_height_ptfont, font.contrast, font.selfont, 
-	{'xpos':+spacing, 'ypos':exper.yloc_pix, 'text':'E', 'height':test_heights, 'ori':seqD}  )
+size_pix = exper.deg2pix( size_deg ) # +font.let_height_ptfont/2.0
+targ = stims.stim_letter( myWin, size_pix, font.contrast, font.selfont, 
+	{'height': test_heights, 'xpos':0.0, 'ypos':0, 'text': which_let, 'ori':targseq}  )
+left = stims.stim_letter( myWin, size_pix, font.contrast, font.selfont, 
+	{'xpos':-spacing, 'ypos':exper.yloc_pix, 'text': which_let, 'height':test_heights, 'ori':seqL,'anchorHoriz':'center', 'anchorVert':'center'}  )
+right = stims.stim_letter( myWin, size_pix, font.contrast, font.selfont, 
+	{'xpos':+spacing, 'ypos':exper.yloc_pix, 'text': which_let, 'height':test_heights, 'ori':seqR,'anchorHoriz':'center', 'anchorVert':'center'}  )
+up = stims.stim_letter( myWin, size_pix, font.contrast, font.selfont, 
+	{'xpos':+spacing, 'ypos':exper.yloc_pix, 'text': which_let, 'height':test_heights, 'ori':seqU,'anchorHoriz':'center', 'anchorVert':'center'}  )
+down = stims.stim_letter( myWin, size_pix, font.contrast, font.selfont, 
+	{'xpos':+spacing, 'ypos':exper.yloc_pix, 'text': which_let, 'height':test_heights, 'ori':seqD,'anchorHoriz':'center', 'anchorVert':'center'}  )
 
-if spacingMult < 99:
-	stims = [ left, targ, right  ] #, olR]
-else:
-	stims = [ targ  ] #, olR]
+stims = [ targ, right, up, left, down, ] #, olR]
 
-#stims = [ otarg ]
-#stims = [ ]
+
+for stim1 in stims:
+    stim1.widget.anchorHoriz='center'
+    stim1.widget.anchorVert='center'
+
+for stim1 in [fixation]:
+    stim1.anchorHoriz='center'
+    stim1.anchorVert='center'
 
 trial_cyles = 1
 
@@ -154,26 +184,26 @@ trialNum=0
 # Calibrate by seeing how long 100 redraws takes
 fixation.setHeight(30)
 fixation.setPos( (0,0) )
-msg = 'Hello! %s -- Spacing is: %f -- Please note filter-- Thx!!' %( SubjectName, spacingMult )
+msg = 'Calibrating monitor timing...'
 fixation.setText( msg.upper() ) # sloan needs to be uppercase
-#fixation.setText( 'Calibrating monitor...' )
 for i in numpy.arange(20):
 	fixation.draw()
 	[stim.draw() for stim in stims]
 	#[cue.draw() for cue in cues]
 	myWin.flip()
 savetimes = myWin.frameIntervals
-fliprate = numpy.mean( savetimes[20:80] )
+fliprate = numpy.mean( savetimes[-40:] )
 print( 'fliprate=%f' % fliprate)
 
 fixation.draw()
 myWin.flip()
 event.waitKeys()
-fixation.setPos( (-1920/2*7/8,0) ) # Fixation in LVF 7/8 to the end of the screen
 
+fixation.setPos( fix_pos) # Fixation in LVF 7/8 to the end of the screen
 fixation.setHeight(200)
 fixation.setText( '+' )
 fixation.draw()
+
 myWin.flip()
 event.waitKeys()
 
@@ -201,15 +231,17 @@ while not done:
 		break
 
 #	print sval
-	font.setCharDegs( sval, exper )
-	for stim in stims:
-		stim.height=font.let_height_ptfont
-#	left.pos =  (spacingMult * exper.deg2pix(sval), exper.yloc_pix )
-#	right.pos =  (-spacingMult * exper.deg2pix(sval), exper.yloc_pix )
-	left.pos =  (spacingMult * exper.deg2pix(sval), exper.yloc_pix )
-	right.pos =  (-spacingMult * exper.deg2pix(sval), exper.yloc_pix )
-#	left.pos =  ( exper.deg2pix ( spacingMult ), exper.yloc_pix )
-#	right.pos =  (- exper.deg2pix(spacingMult), exper.yloc_pix )
+	#font.setCharDegs( sval, exper )
+	#for stim in stims:
+		#stim.height=font.let_height_ptfont
+
+	cx = fix_pos[0] + exper.deg2pix(ecc)
+	cy = 0
+	targ.pos =  (cx,cy)
+	left.pos =  (cx - sval * size_pix, cy )
+	right.pos = (cx + sval * size_pix, cy )
+	up.pos =    (cx, cy + sval * size_pix )
+	down.pos =  (cx, cy - sval * size_pix )
 
 	myWin.flip()
 #	targcol = ( (sval-100)/100.0, (sval-100)/100.0, (sval-100)/100.0 )
@@ -217,7 +249,7 @@ while not done:
 		numflips = trial_time / fliprate
 		for angle in numpy.linspace( 0, numpy.pi*(trial_cycles/1.0), numflips ):
 			#contr = -0.5 + -0.5 * abs(numpy.sin( angle) )
-           
+
 			[stim.draw( (contr,contr,contr) ) for stim in stims]
 			[cue.draw() for cue in cues]
 			fixation.draw()
@@ -274,24 +306,27 @@ while not done:
 		myWin.flip()
 
 	valid_resp = True
+
+	if which_let=='E':
+		resp_map={'left': 180, 'right':0, 'up':270, 'down':90}
+	elif which_let=='T':
+		resp_map={'left': 270, 'right':90, 'up':0, 'down':180}
 	for key in event.waitKeys():
 		if key in [ 'escape', 'q' ]:
 			done = True
 			valid_resp = False
-		if key in [ 'left' ]:
-			resp_ori = 180
-		if key in [ 'right' ]:
-			resp_ori = 0
-		if key in [ 'up' ]:
-			resp_ori = 270  # TODO: FIXME!!!
-		if key in [ 'down' ]:
-			resp_ori = 90 
+		else:
+			resp_ori = resp_map[key]
 
 	iscorrect = (resp_ori == targ.ori)
-	print(key, targ.ori, valid_resp,resp_ori,targ.strvals())
+	print(key, targ.ori, iscorrect, valid_resp,resp_ori,targ.strvals())
 	if valid_resp:
-	    outfile.write( "%s, %s\n" % (key, targ.strvals())) #, olL.strvals(), olR.strvals() ) )
 	    iscorrect = (resp_ori == targ.ori)
+	    s="%f,%s,"%(sval,key)
+	    s+= ",".join([str(s.ori) for s in stims])
+	    s+= ',%d'%int(iscorrect)
+	    outfile.writelines('%s\n'%s )
+
 	    thisStair.addData( iscorrect )
 
 	    trialNum += 1
@@ -302,30 +337,19 @@ myWin.close()
 
 outfile.write( 'height=' + str(stimHeightDeg) + "\n")
 outfile.write ('mean value: %f\t' % (numpy.mean( thisStair.reversalIntensities[2:] ) ) )
-outfile.write ('spacingMult: %s\t' % str( spacingMult ) )
 outfile.write ('SubjectName: %s\n' %  SubjectName )
 
 if OutputHeader:
 	outfile.write( '#END\n' )
-	outfile.write( '%s\n' % [str(stim) for stim in stims])
 	outfile.write( "#V 0.2\n" )
-	outfile.write( '#font=' + str(font.let_height_ptfont) + "\n")
-	outfile.write( '#font.let_height_pixels=' + str(font.let_height_pixels) + "\n")
-	outfile.write('#font.let_height_mm=' + str(font.let_height_mm) + "\n")
-	outfile.write('#font.let_height_deg=' + str(font.let_height_deg) + "\n")
-	#outfile.write('#ratio of (ascender+descender) to o=' + str(ascender_and_descender_to_o) + "\n")
-	#outfile.write('#ratio of ptfont to pixels=0' + str(ptfont_to_pixels) + "\n")
-	#utfile.write( '#distance=' + str(distance) + "\n")
-	#utfile.write( '#pixels per mm=' + str(screensize) + "\n")
-	#utfile.write( '#degrees_eccentricity=' + str(degrees_eccentricity) + "\n" )
-	outfile.write( '#exper.yloc_pix=' + str(exper.yloc_pix) + "\n" )
+	outfile.write( '#contrast=' + str(contrast) + "\n" )
+	outfile.write( '#size_pix=' + str(size_pix) + "\n")
+	outfile.write( '#size_deg=' + str(size_deg) + "\n")
+	outfile.write( '#ecc=' + str(ecc) + "\n")
+	outfile.write( '#distance=' + str(distance) + "\n")
+	outfile.write( '#cx=' + str(cx) + "\n" )
+	outfile.write( '#cy=' + str(cy) + "\n" )
 	outfile.write( '#trial time=' + str(trial_time) + "\n")
-	outfile.write( "#key, targ.strvals(), olL.strvals(), olR.strvals() ")
+	outfile.write( '#which_let' + str(which_let) + "\n")
 
 outfile.close()
-
-#pylab.plot(myWin.frameIntervals)
-#pylab.grid()
-#pylab.show()
-
-

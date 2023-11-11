@@ -17,8 +17,8 @@ class stim_letter():
 	"""Generic letter with list of pre-computed (passed in) parameters:
 			xpos, ypos, and text """
 
-	def __init__(self, win, height, targcol, selfont,  list ):
-		self.param_list = list.copy() # Hopefully will not be that deep
+	def __init__(self, win, height, targcol, selfont,  lis ):
+		self.param_list = lis.copy() # Hopefully will not be that deep
 		self.widget = visual.TextStim(win,alignHoriz='center',height=height, rgb=targcol, ori=0,font="Sloan", fontFiles=["Sloan.otf"] )
 		self.pos = (0,0)
 		self.text = ""
